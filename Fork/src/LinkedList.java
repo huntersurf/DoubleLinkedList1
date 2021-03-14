@@ -105,8 +105,79 @@ public class LinkedList<E> implements List<E> {
         return result.toString();
     }
 
+    /**
+     * Find the node at specified position
+     * @param index The postion of the node sought
+     * @returns The node at index or null if node does not exist.
+     */
     @Override
     private Node<E> getNode(int index) {
-        Node<E>
+        Node<E> node = head;
+        for (int i = 0; i < index && node != null; i++) {
+            node = node.next;
+        }
+        return node;
+    }
+
+    /**
+     * Get the data value at index
+     * @param index Position of element to return
+     * @return data from index element.
+     * @throws IndexOutOfBoundsException if index is out of range.
+     */
+    @Override
+    public E get(int index) {
+        if(index < 0 || index >= this.size) {
+            throw new IndexOutOfBoundsException(Integer.toString(index));
+        }
+        Node<E> node = getNode(index);
+        return node.data;
+    }
+
+    /**
+     * Set the data value at index
+     * @param index Position of the item to change
+     * @param newValue The new value to set at desired index
+     * @returns Data value previously at index
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
+    @Override
+    public E set(int index, E newValue) {
+         if(index < 0 || index >= size) {
+             throw new IndexOutOfBoundsException(Integer.toString(index));
+         }
+         Node<E> node = getNode(index);
+         E result = node.data;
+         node.data = newValue;
+         return result;
+    }
+
+    /**
+     * Insert new data node at desired position
+     * @param index Position where the node will be inserted
+     * @param item Data the node will have
+     * @throws IndexOutOfBoundsException if index is not in range
+     */
+    @Override
+    public void add(int index, E item) {
+        if(index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(Integer.toString(index));
+        }
+        if(index == 0) {
+            addFirst(item);
+        } else {
+            Node<E> node = getNode(index-1);
+            addAfter(node, item);
+        }
+    }
+
+    /**
+     *  Adds a new node to the end of the list
+     * @param item Data for new node
+     * @return If node was successful in creation
+     */
+    public boolean add(E item) {
+        add(this.size, item);
+        return true;
     }
 }
