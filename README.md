@@ -3,4 +3,4 @@ Double Linked List Assignment written for Java113 class. Newest update is 11:17p
 Assignment just checks to see if all methods created for a Double-Linked list class work properly
 
 Author: Hunter Stennett
-Version. 1.1
+Version. 1.3
