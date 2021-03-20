@@ -1,6 +1,6 @@
 import java.util.List;
 
-public class LinkedList<E> implements List<E> {
+public class LinkedList<E implements List<E> {
     Node<E> head = null;
     int size;
 
@@ -18,6 +18,12 @@ public class LinkedList<E> implements List<E> {
             this.next = nodeRef;
         }
     }
+
+    public LinkedList() {
+        head = null;
+    }
+
+
 
     /**
      * addFirst() adds a node to the front of the list, or the
@@ -39,6 +45,8 @@ public class LinkedList<E> implements List<E> {
         node.next = new Node<E>(item, node.next);
         size++;
     }
+
+
     private E removeAfter(Node<E> node) {
         Node<E> temp = node.next;
         if(temp != null) {
@@ -54,8 +62,6 @@ public class LinkedList<E> implements List<E> {
         Node<E> temp = head;
         if (head != null) {
             head = head.next;
-        }
-        if (temp != null) {
             size--;
             return temp.data;
         } else {
@@ -85,6 +91,11 @@ public class LinkedList<E> implements List<E> {
         }
     }
 
+    @Override
+    public boolean contains(Object o) {
+        return false;
+    }
+
     /**
      * toString() method consolidates the data of each node by
      * iterating through the Linked-List and creates a String
@@ -110,7 +121,6 @@ public class LinkedList<E> implements List<E> {
      * @param index The postion of the node sought
      * @returns The node at index or null if node does not exist.
      */
-    @Override
     private Node<E> getNode(int index) {
         Node<E> node = head;
         for (int i = 0; i < index && node != null; i++) {
@@ -120,7 +130,8 @@ public class LinkedList<E> implements List<E> {
     }
 
     /**
-     * Get the data value at index
+     * Get the data value at index, could be helper method for
+     * indicating within list range
      * @param index Position of element to return
      * @return data from index element.
      * @throws IndexOutOfBoundsException if index is out of range.
@@ -179,5 +190,52 @@ public class LinkedList<E> implements List<E> {
     public boolean add(E item) {
         add(this.size, item);
         return true;
+    }
+
+    @Override
+    public boolean contains() {
+        return contains();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        Node<E> node = (Node<E>) o;
+        Node<E> position = head;
+        if(position == null) {
+            return false;
+        }
+        while(position.next != null) {
+
+        }
+    }
+
+    @Override
+    public LinkedList<E> clone() {
+        try {
+            //noinspection unchecked
+            LinkedList<E> copy = (LinkedList<E>)super.clone();
+            if(head == null) {
+                copy.head = null;
+            } else {
+                copy.head = copyOf(head);
+                return copy;
+            }
+        } catch(CloneNotSupportedException e) {
+            return null;
+        }
+        return null;
+    }
+
+    public Node<E> copyOf(Node<E> otherHead) {
+        Node<E> position = head;
+        Node<E> newHead;
+        Node<E> end;
+        // Create first node:
+        newHead = new Node<E> ((E) (position.data).clone(), null);
+        end = newHead;
+        position = position.next;
+        while(position != null) {
+            end.next = new Node<E> ((E) (position.data).clone(), null);
+        }
     }
 }
