@@ -82,6 +82,6 @@ public class DoubleLinkedList<E> implements List {
     }
 
     public Iterator getIterator() {
-        return Iterator;
+        return null;
     }
 }
