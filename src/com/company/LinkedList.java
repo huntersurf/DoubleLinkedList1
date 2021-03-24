@@ -1,8 +1,8 @@
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+package com.company;
 
-public class LinkedList<E implements List<E> {
+import java.util.*;
+
+public class LinkedList<E> implements List<E> {
     Node<E> head = null;
     int size;
 
@@ -21,18 +21,21 @@ public class LinkedList<E implements List<E> {
         }
     }
 
-    private class ListIterator<E> {
+    public class ListIterator<E> implements java.util.ListIterator<E> {
         private Node position;
         private Node previous;
+        private int size;
 
         public ListIterator(){
             position = head; // Instance variable of outer class
             previous = null;
+            size = 0;
         }
 
         public void restart() {
             position = head;
             previous = null;
+            size = 0;
         }
 
         public E next() {
@@ -42,11 +45,51 @@ public class LinkedList<E implements List<E> {
             E curData = (E) position.data;
             previous = position;
             position = position.next;
+            size++;
             return curData;
+        }
+
+        public E previous() {
+            if(!hasPrevious()) {
+                throw new NoSuchElementException();
+            }
+            E curData = (E) position.data;
+            position.next = previous;
+            previous = position;
+            size--;
+            return curData;
+        }
+
+        @Override
+        public int nextIndex() {
+            return size;
+        }
+
+        public int previousIndex() {
+            return size - 1;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+
+        @Override
+        public void set(E e) {
+
+        }
+
+        @Override
+        public void add(E e) {
+
         }
 
         public boolean hasNext() {
             return (position != null);
+        }
+
+        public boolean hasPrevious() {
+            return (previous != null);
         }
 
         public E peek() {
@@ -59,14 +102,18 @@ public class LinkedList<E implements List<E> {
         public void addHere(E data) {
             if(position == null && previous != null) {
                 previous.next = new Node(data, null);
-            } else if (position == null || previous == null) {
-                E temp = (E) data;
-                LinkedList.this.addFirst(temp);
+                size++;
             } else {
-                // previous and position are consecutive nodes
-                Node temp = new Node(data, position);
-                previous.next = temp;
-                previous = temp;
+                if (position == null || previous == null) {
+                    Node<E> temp = new Node<>(data, null);
+                   // LinkedList.this.head = temp;
+                } else {
+                    // previous and position are consecutive nodes
+                    Node temp = new Node(data, position);
+                    previous.next = temp;
+                    previous = temp;
+                }
+                size++;
             }
         }
 
@@ -100,10 +147,20 @@ public class LinkedList<E implements List<E> {
         return (Iterator<E>) new ListIterator();
     }
 
+    @Override
+    public Object[] toArray() {
+        return new Object[0];
+    }
+
+    @Override
+    public <T> T[] toArray(T[] ts) {
+        return null;
+    }
+
+
     public LinkedList() {
         head = null;
     }
-
 
 
     /**
@@ -170,11 +227,6 @@ public class LinkedList<E implements List<E> {
         } else {
             return false;
         }
-    }
-
-    @Override
-    public boolean contains(Object o) {
-        return false;
     }
 
     /**
@@ -263,6 +315,36 @@ public class LinkedList<E implements List<E> {
         }
     }
 
+    @Override
+    public E remove(int i) {
+        return null;
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        return 0;
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        return 0;
+    }
+
+    @Override
+    public java.util.ListIterator<E> listIterator() {
+        return null;
+    }
+
+    @Override
+    public java.util.ListIterator<E> listIterator(int i) {
+        return null;
+    }
+
+    @Override
+    public List<E> subList(int i, int i1) {
+        return null;
+    }
+
     /**
      *  Adds a new node to the end of the list
      * @param item Data for new node
@@ -274,6 +356,40 @@ public class LinkedList<E implements List<E> {
     }
 
     @Override
+    public boolean remove(Object o) {
+        return false;
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> collection) {
+        return false;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends E> collection) {
+        return false;
+    }
+
+    @Override
+    public boolean addAll(int i, Collection<? extends E> collection) {
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+        return false;
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+        return false;
+    }
+
+    @Override
+    public void clear() {
+
+    }
+
     public boolean contains() {
         return contains();
     }
@@ -288,6 +404,7 @@ public class LinkedList<E implements List<E> {
         while(position.next != null) {
 
         }
+        return false;
     }
 
     @Override
@@ -298,7 +415,7 @@ public class LinkedList<E implements List<E> {
             if(head == null) {
                 copy.head = null;
             } else {
-                copy.head = copyOf(head);
+                copy.head = this.head;
                 return copy;
             }
         } catch(CloneNotSupportedException e) {
@@ -307,7 +424,7 @@ public class LinkedList<E implements List<E> {
         return null;
     }
 
-    public Node<E> copyOf(Node<E> otherHead) {
+    /**public Node<E> copyOf(Node<E> otherHead) {
         Node<E> position = head;
         Node<E> newHead;
         Node<E> end;
@@ -318,5 +435,5 @@ public class LinkedList<E implements List<E> {
         while(position != null) {
             end.next = new Node<E> ((E) (position.data).clone(), null);
         }
-    }
+     }**/
 }

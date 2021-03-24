@@ -14,7 +14,10 @@ import static org.junit.Assert.*;
  * DoubleLinkedListTest : Test class for the DoubleLinkedList implementation and its constituent ListIterator
  * inner class.
  */
-public class DoubleLinkedListTest {
+public class Main {
+    public static void main(String[] args) {
+
+    }
 
     /** Values to be added in linked list's setup */
     private static final String[] STRING_VALUES = {"first", "second", "third", "fourth" , "fifth"};
