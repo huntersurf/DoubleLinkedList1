@@ -1,9 +1,6 @@
 package com.company;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 
 public class DoubleLinkedList<E> implements List<E> {
 
@@ -11,6 +8,12 @@ public class DoubleLinkedList<E> implements List<E> {
         private E data;
         private Node<E> next = null;
         private Node<E> prev = null;
+
+        private Node() {
+            E data = null;
+            next = null;
+            prev = null;
+        }
 
         private Node(E dataItem) {
             this.data = dataItem;
@@ -43,26 +46,26 @@ public class DoubleLinkedList<E> implements List<E> {
         }
     }
 
-    private class ListIterator<E> implements java.util.ListIterator {
-        private Node<E> prev;
-        private Node<E> next;
+    /**private class ListIterator<E> implements java.util.ListIterator {
+        private Node<E> pre;
+        private Node<E> post;
         private int index;
 
-        public ListIterator(Node<E> prev, Node<E> next, int size) {
-            this.prev = (Node<E>) head;
-            this.next = prev.next;
+        public ListIterator(Node<E> pre, Node<E> post, int size) {
+            this.pre = (Node<E>) head;
+            this.post = pre.next;
             this.index = 0;
         }
 
         public boolean hasNext() {
-            return (prev.next != null);
+            return (pre.next != null);
         }
 
         public void remove() {
             try{
                 Node<E> temp = next();
-                this.prev = next.next;
-                this.next = prev.next;
+                this.pre = post.next;
+                this.post = pre.next;
                 index--;
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage());
@@ -73,24 +76,24 @@ public class DoubleLinkedList<E> implements List<E> {
         public void set(Object o) {
             E dataItem = (E) o;
             if(dataItem != null && this.getClass() == dataItem.getClass()) {
-                prev.next.data = dataItem;
+                pre.next.data = dataItem;
             }
         }
 
         public Node<E> next() {
-            if(prev.next == null) {
+            if(pre.next == null) {
                 throw new NoSuchElementException();
             } else if(hasNext()) {
-                prev = prev.next;
-                next = next.next;
-                return prev.next;
+                pre = pre.next;
+                post = post.next;
+                return pre.next;
             }
             return null;
         }
 
         @Override
         public boolean hasPrevious() {
-            return (prev != null);
+            return (pre != null);
         }
 
         @Override
@@ -109,9 +112,9 @@ public class DoubleLinkedList<E> implements List<E> {
         }
 
         public void add(Node<E> node) {
-            prev = prev.next;
-            next = next.next;
-            prev.prev = node;
+            pre = pre.next;
+            post = post.next;
+            pre.prev = node;
             index++;
         }
 
@@ -122,6 +125,101 @@ public class DoubleLinkedList<E> implements List<E> {
                 index++;
             }
         }
+    }*/
+
+    private class ListIterator<E> implements java.util.ListIterator<E> {
+        private Node<E> current;
+        private Node<E> lastAccessed;
+        private int index;
+
+        private ListIterator() {
+            current = (Node<E>) head;
+            lastAccessed = null;
+            index = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < size;
+        }
+
+        @Override
+        public E next() {
+            if(!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            lastAccessed = current;
+            E data = current.data;
+            current = current.next;
+            index++;
+            return data;
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return index > 0;
+        }
+
+        @Override
+        public E previous() {
+            if(!hasPrevious()) {
+                throw new NoSuchElementException();
+            }
+            current = current.prev;
+            lastAccessed = current;
+            index--;
+            return current.data;
+        }
+
+        @Override
+        public int nextIndex() {
+            return index;
+        }
+
+        @Override
+        public int previousIndex() {
+            return index - 1;
+        }
+
+        @Override
+        public void remove() {
+            if (lastAccessed == null) {
+                throw new IllegalStateException();
+            }
+            Node<E> pre = lastAccessed.prev;
+            Node<E> post = lastAccessed.next;
+            pre.next = post;
+            post.prev = pre;
+            size--;
+            if (current == lastAccessed)
+                current = post;
+            else
+                index--;
+            lastAccessed = null;
+        }
+
+        @Override
+        public void set(E e) {
+            if(lastAccessed == null) {
+                throw new IllegalStateException();
+            }
+            lastAccessed.data = e;
+        }
+
+        @Override
+        public void add(E e) {
+            Node<E> pre  = current.prev;
+            Node<E> temp = new Node();
+            Node<E> post = current;
+            temp.data = e;
+            pre.next = temp;
+            temp.next = post;
+            post.prev = temp;
+            temp.prev = pre;
+            size++;
+            index++;
+            lastAccessed = null;
+        }
     }
 
     private Node<E> head;
@@ -129,16 +227,13 @@ public class DoubleLinkedList<E> implements List<E> {
     private int size;
     @Override
     public String toString() {
-        Node<E> nodeRef = head;
-        String result = "";
-        while (nodeRef != null) {
-            result += nodeRef.data;
-            if (nodeRef.next != null) {
-                result += " ==> ";
-            }
-            nodeRef = nodeRef.next;
+        StringBuilder str = new StringBuilder();
+        str.append("[");
+        for (E data : this) {
+            str.append(data + " ");
         }
-        return result;
+            str.append("]");
+        return str.toString();
     }
 
     public int size() {
@@ -165,7 +260,7 @@ public class DoubleLinkedList<E> implements List<E> {
 
     @Override
     public java.util.Iterator iterator() {
-        return new ListIterator(head, head.next, size());
+        return new ListIterator();
     }
 
     @Override
@@ -176,7 +271,7 @@ public class DoubleLinkedList<E> implements List<E> {
 
     public boolean add(Object o) {
         E dataItem = (E) o;
-        if(dataItem == null || (dataItem.getClass() != o.getClass())) {
+        if(dataItem == null) {
             return false;
         }
         try{
@@ -192,7 +287,7 @@ public class DoubleLinkedList<E> implements List<E> {
     @Override
     public boolean remove(Object o) {
         E dataItem = (E) o;
-        if(dataItem == null || dataItem.getClass() != o.getClass()) {
+        if(dataItem == null) {
             return false;
         }
         try{
@@ -286,11 +381,11 @@ public class DoubleLinkedList<E> implements List<E> {
 
     @Override
     public ListIterator listIterator() {
-        return null;
+        return new ListIterator();
     }
 
     @Override
-    public ListIterator listIterator(int i) {
+    public java.util.ListIterator listIterator(int i) {
         return null;
     }
 
@@ -338,7 +433,7 @@ public class DoubleLinkedList<E> implements List<E> {
         return null;
     }
 
-    public ListIterator getIterator() {
+    public java.util.ListIterator getIterator() {
         return null;
     }
 }
