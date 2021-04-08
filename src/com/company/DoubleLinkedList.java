@@ -3,144 +3,59 @@ package com.company;
 import java.util.*;
 
 public class DoubleLinkedList<E> implements List<E> {
+    private Node<E> head;
+    private Node<E> tail;
+    private int size;
 
-    private static class Node<E> {
+    private class Node<E> {
+        private Node<E> next;
+        private Node<E> prev;
         private E data;
-        private Node<E> next = null;
-        private Node<E> prev = null;
 
-        private Node() {
-            E data = null;
+        public Node() {
             next = null;
             prev = null;
+            data = null;
         }
 
-        private Node(E dataItem) {
-            this.data = dataItem;
+        public Node(E dataItem) {
+            next = null;
+            prev = null;
+            data = dataItem;
         }
 
-        private Node(E dataItem, Node<E> next) {
-            this.data = dataItem;
-            if(next != null) {
-                this.next = next;
-                this.prev = null;
-            }
-        }
-
-        private Node(E dataItem, Node<E> next, Node<E> prev) {
-            this.data = dataItem;
+        public Node(E dataItem, Node<E> next) {
             this.next = next;
-            this.prev = prev;
-        }
-
-
-
-        @Override
-        public boolean equals(Object other) {
-            if(other == null || this.getClass() != other.getClass()) {
-                return false;
-            } else {
-                Node<E> otherNode = (Node<E>) other;
-                return this.data == otherNode.data;
-            }
+            this.prev = null;
+            this.data = dataItem;
         }
     }
 
-    /**private class ListIterator<E> implements java.util.ListIterator {
-        private Node<E> pre;
-        private Node<E> post;
+    private class ListIter implements ListIterator<E> {
+        private Node<E> nextItem;
+        private Node<E> lastReturned;
         private int index;
 
-        public ListIterator(Node<E> pre, Node<E> post, int size) {
-            this.pre = (Node<E>) head;
-            this.post = pre.next;
-            this.index = 0;
-        }
-
-        public boolean hasNext() {
-            return (pre.next != null);
-        }
-
-        public void remove() {
-            try{
-                Node<E> temp = next();
-                this.pre = post.next;
-                this.post = pre.next;
-                index--;
-            } catch (IllegalStateException e) {
-                System.out.println(e.getMessage());
+        public ListIter(int i) {
+            if(i < 0 || i > size) {
+                throw new IndexOutOfBoundsException("Invalid index " + i);
+            }
+            lastReturned = null;
+            if(i == size) {
+                index = size;
+                nextItem = null;
+            } else {
+                nextItem = head;
+                for(index = 0; index < i; index++) {
+                    nextItem = nextItem.next;
+                }
             }
         }
 
-        @Override
-        public void set(Object o) {
-            E dataItem = (E) o;
-            if(dataItem != null && this.getClass() == dataItem.getClass()) {
-                pre.next.data = dataItem;
-            }
-        }
-
-        public Node<E> next() {
-            if(pre.next == null) {
-                throw new NoSuchElementException();
-            } else if(hasNext()) {
-                pre = pre.next;
-                post = post.next;
-                return pre.next;
-            }
-            return null;
-        }
-
-        @Override
-        public boolean hasPrevious() {
-            return (pre != null);
-        }
-
-        @Override
-        public Object previous() {
-            return null;
-        }
-
-        @Override
-        public int nextIndex() {
-            return 0;
-        }
-
-        @Override
-        public int previousIndex() {
-            return 0;
-        }
-
-        public void add(Node<E> node) {
-            pre = pre.next;
-            post = post.next;
-            pre.prev = node;
-            index++;
-        }
-
-        public void add(Object o) {
-            E dataItem = (E) o;
-            if(dataItem != null || this.getClass() != dataItem.getClass()) {
-                head = new Node(o, head);
-                index++;
-            }
-        }
-    }*/
-
-    private class ListIterator<E> implements java.util.ListIterator<E> {
-        private Node<E> current;
-        private Node<E> lastAccessed;
-        private int index;
-
-        private ListIterator() {
-            current = (Node<E>) head;
-            lastAccessed = null;
-            index = 0;
-        }
 
         @Override
         public boolean hasNext() {
-            return index < size;
+            return nextItem != null;
         }
 
         @Override
@@ -148,16 +63,15 @@ public class DoubleLinkedList<E> implements List<E> {
             if(!hasNext()) {
                 throw new NoSuchElementException();
             }
-            lastAccessed = current;
-            E data = current.data;
-            current = current.next;
+            lastReturned = nextItem;
+            nextItem = nextItem.next;
             index++;
-            return data;
+            return lastReturned.data;
         }
 
         @Override
         public boolean hasPrevious() {
-            return index > 0;
+            return ((nextItem == null && size != 0) || nextItem.prev != null);
         }
 
         @Override
@@ -165,15 +79,19 @@ public class DoubleLinkedList<E> implements List<E> {
             if(!hasPrevious()) {
                 throw new NoSuchElementException();
             }
-            current = current.prev;
-            lastAccessed = current;
+            if(nextItem == null) {
+                nextItem = tail;
+            } else {
+                nextItem = nextItem.prev;
+            }
+            lastReturned = nextItem;
             index--;
-            return current.data;
+            return lastReturned.data;
         }
 
         @Override
         public int nextIndex() {
-            return index;
+            return index + 1;
         }
 
         @Override
@@ -183,63 +101,64 @@ public class DoubleLinkedList<E> implements List<E> {
 
         @Override
         public void remove() {
-            if (lastAccessed == null) {
-                throw new IllegalStateException();
+            if(lastReturned == null) {
+                throw new NoSuchElementException();
+            } else if(index == 0) {
+                removeFirst();
+            } else if(index > 0 && index <= size) {
+                removeAfter(getNode(index - 2));
             }
-            Node<E> pre = lastAccessed.prev;
-            Node<E> post = lastAccessed.next;
-            pre.next = post;
-            post.prev = pre;
-            size--;
-            if (current == lastAccessed)
-                current = post;
-            else
-                index--;
-            lastAccessed = null;
         }
 
         @Override
         public void set(E e) {
-            if(lastAccessed == null) {
-                throw new IllegalStateException();
+            if(lastReturned == null) {
+                throw new NoSuchElementException();
+            } else {
+                lastReturned.data = e;
             }
-            lastAccessed.data = e;
         }
 
         @Override
         public void add(E e) {
-            Node<E> pre  = current.prev;
-            Node<E> temp = new Node();
-            Node<E> post = current;
-            temp.data = e;
-            pre.next = temp;
-            temp.next = post;
-            post.prev = temp;
-            temp.prev = pre;
+            if(head == null) {
+                head = new Node<E>(e);
+                tail = head;
+            } else if(nextItem == head) {
+                Node<E> newNode = new Node<E>(e);
+                newNode.next = nextItem;
+                nextItem.prev = newNode;
+                head = newNode;
+            } else if(nextItem == null) {
+                Node<E> newNode = new Node<E>(e);
+                tail.next = newNode;
+                newNode.prev = tail;
+                tail = newNode;
+            } else {
+                Node<E> newNode = new Node<E>(e);
+                newNode.prev = nextItem.prev;
+                nextItem.prev.next = newNode;
+                newNode.next = nextItem;
+                nextItem.prev = newNode;
+            }
             size++;
             index++;
-            lastAccessed = null;
+            lastReturned = null;
         }
     }
 
-    private Node<E> head;
-    private Node<E> tail;
-    private int size;
+    public DoubleLinkedList() {
+        head = null;
+        tail = null;
+        size = 0;
+    }
+
     @Override
-    public String toString() {
-        StringBuilder str = new StringBuilder();
-        str.append("[");
-        for (E data : this) {
-            str.append(data + " ");
-        }
-            str.append("]");
-        return str.toString();
-    }
-
     public int size() {
         return this.size;
     }
 
+    @Override
     public boolean isEmpty() {
         return size == 0;
     }
@@ -247,20 +166,85 @@ public class DoubleLinkedList<E> implements List<E> {
     @Override
     public boolean contains(Object o) {
         E dataItem = (E) o;
-        boolean contains = false;
-        Node<E> node = head;
-        while(node.next != null) {
-            if(node.next.data.equals(dataItem)) {
-                contains = true;
+        Node<E> nodeRef = new Node<E>(dataItem, head);
+        int index = indexOf(dataItem);
+        Node<E> node = getNode(index);
+        while(nodeRef != null) {
+            if(nodeRef.data == dataItem) {
+                return true;
             }
+            nodeRef = nodeRef.next;
+        }
+        return false;
+    }
+
+    private void addFirst(E dataItem) {
+        Node<E> node = new Node<E>(dataItem);
+        head = new Node<E>(dataItem, head);
+        size++;
+    }
+
+    private void addAfter(Node<E> node, E dataItem) {
+        node.next = new Node<E>(dataItem, node.next);
+        node.next.prev = node;
+        size++;
+    }
+
+    private E removeAfter(Node<E> node) {
+        Node<E> temp = node.next;
+        if(temp != null) {
+            node.next = temp.next;
+            node.next.prev = node;
+            size--;
+            return temp.data;
+        } else {
+            throw new NoSuchElementException();
+        }
+    }
+
+    private E removeFirst() {
+        Node<E> temp = head;
+        if(head != null) {
+            head = head.next;
+            head.next.prev = head;
+        }
+        if(temp != null) {
+            size--;
+            return temp.data;
+        } else {
+            throw new NoSuchElementException();
+        }
+    }
+
+    public String toString() {
+        Node<E> nodeRef = head;
+        String result = "[";
+        if(size == 0) {
+            result = result + "]";
+        };
+        while(nodeRef != null) {
+            result = result + nodeRef.data;
+            if(nodeRef.next != null) {
+                result = result + ", ";
+            } else {
+                result = result + "]";
+            }
+            nodeRef = nodeRef.next;
+        }
+        return result;
+    }
+
+    private Node<E> getNode(int index) {
+        Node<E> node = head;
+        for(int i = 0; i < index && node != null; i++) {
             node = node.next;
         }
-        return contains;
+        return node;
     }
 
     @Override
-    public java.util.Iterator iterator() {
-        return new ListIterator();
+    public Iterator<E> iterator() {
+        return new ListIter(0);
     }
 
     @Override
@@ -268,110 +252,126 @@ public class DoubleLinkedList<E> implements List<E> {
         return new Object[0];
     }
 
+    @Override
+    public <T> T[] toArray(T[] a) {
+        return null;
+    }
 
-    public boolean add(Object o) {
-        E dataItem = (E) o;
-        if(dataItem == null) {
-            return false;
-        }
-        try{
-            head = new Node<E>(dataItem, head);
-            size++;
+    @Override
+    public boolean add(E dataItem) {
+        if(size == 0) {
+            addFirst(dataItem);
             return true;
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
+        } else if(size > 0) {
+            addAfter(getNode(size - 1), dataItem);
+            return true;
+        } else {
             return false;
         }
     }
 
     @Override
     public boolean remove(Object o) {
-        E dataItem = (E) o;
-        if(dataItem == null) {
-            return false;
-        }
-        try{
-            Node<E> node = head;
-            while(node.next != null) {
+        E data = (E) o;
+        Node<E> node = head;
+        while(node != null) {
+            if(node.data == o) {
                 node = node.next;
-                if(node.data == dataItem) {
-                    node.prev = node.next.next;
-                    node.next = node.prev.next;
-                    return true;
-                }
+                node.prev = node.prev.prev;
+                return true;
             }
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
+            node = node.next;
         }
         return false;
     }
 
     @Override
-    public boolean addAll(Collection collection) {
+    public boolean containsAll(Collection<?> c) {
         return false;
     }
 
     @Override
-    public boolean addAll(int i, Collection collection) {
+    public boolean addAll(Collection<? extends E> c) {
+        return false;
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends E> c) {
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return false;
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
         return false;
     }
 
     @Override
     public void clear() {
-        Node<E> node = new Node(head.data, head);
-        while(node.next != null) {
-            head = node.next;
-            node = node.next;
-        }
+        head = null;
+        tail = null;
         size = 0;
     }
 
     @Override
-    public E get(int i) {
-        int index = 0;
-        Node<E> node = head;
-        while(index <= size() && i <= size() && node.next != null) {
-            node = node.next;
-            if(index == i) {
-                return (E) node.data;
-            }
-            index++;
+    public E get(int index) {
+        if(index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(Integer.toString(index));
         }
-        return null;
+        Node<E> node = getNode(index);
+        return node.data;
     }
 
     @Override
-    public Object set(int i, Object o) {
-        return null;
+    public E set(int index, E element) {
+        if(index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(Integer.toString(index));
+        }
+        Node<E> node = getNode(index);
+        E result = node.data;
+        node.data = element;
+        return result;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DoubleLinkedList<?> that = (DoubleLinkedList<?>) o;
-        return size == that.size &&
-                Objects.equals(head, that.head);
+    public void add(int index, E element) {
+        if(index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(Integer.toString(index));
+        }
+        if(index == 0) {
+            addFirst(element);
+        } else {
+            Node<E> node = getNode(index);
+            addAfter(node, element);
+
+        }
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(head, size);
-    }
-
-    @Override
-    public void add(int i, Object o) {
-
-    }
-
-    @Override
-    public E remove(int i) {
-        return null;
+    public E remove(int index) {
+        Node<E> temp = getNode(index - 1);
+        Node<E> node = temp.next;
+        removeAfter(temp);
+        return node.next.data;
     }
 
     @Override
     public int indexOf(Object o) {
-        return 0;
+        E obj = (E) o;
+        Node<E> node = head;
+        int index = 0;
+        while(node != null) {
+            if(node.data == obj) {
+                return index;
+            }
+            index++;
+            node = node.next;
+        }
+        return -1;
     }
 
     @Override
@@ -380,60 +380,18 @@ public class DoubleLinkedList<E> implements List<E> {
     }
 
     @Override
-    public ListIterator listIterator() {
-        return new ListIterator();
+    public ListIterator<E> listIterator() {
+        return new ListIter(0);
     }
 
     @Override
-    public java.util.ListIterator listIterator(int i) {
+    public ListIterator<E> listIterator(int index) {
+        return new ListIter(index);
+    }
+
+    @Override
+    public List<E> subList(int fromIndex, int toIndex) {
         return null;
     }
 
-    @Override
-    public List subList(int i, int i1) {
-        return null;
-    }
-
-    @Override
-    public boolean retainAll(Collection collection) {
-        return false;
-    }
-
-    @Override
-    public boolean removeAll(Collection collection) {
-        return false;
-    }
-
-    @Override
-    public boolean containsAll(Collection collection) {
-        return false;
-    }
-
-    @Override
-    public Object[] toArray(Object[] objects) {
-        return new Object[0];
-    }
-
-    public boolean remove(Node<E> node) {
-        int index = 0;
-        Node<E> position = head;
-        while(position.next != null && index < size) {
-            if(position.next.equals(node)) {
-                Node<E> temp = position;
-                node = position.next;
-                return true;
-            }
-            index++;
-            position = position.next;
-        }
-        return false;
-    }
-
-    public Node<E> contains(Node<E> node) {
-        return null;
-    }
-
-    public java.util.ListIterator getIterator() {
-        return null;
-    }
 }
